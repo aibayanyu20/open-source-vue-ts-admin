@@ -4,51 +4,69 @@
       id="hamburger-container"
       :is-active="sidebar.opened"
       class="hamburger-container"
-      @toggleClick="toggleSideBar"
+      @toggle-click="toggleSideBar"
     />
     <breadcrumb
       id="breadcrumb-container"
       class="breadcrumb-container"
     />
     <div class="right-menu">
+      <template v-if="device!=='mobile'">
+        <!--        <header-search class="right-menu-item" />-->
+        <error-log class="errLog-container right-menu-item hover-effect" />
+        <screenfull class="right-menu-item hover-effect" />
+        <!--        <el-tooltip-->
+        <!--          :content="$t('navbar.size')"-->
+        <!--          effect="dark"-->
+        <!--          placement="bottom"-->
+        <!--        >-->
+        <!--          <size-select class="right-menu-item hover-effect" />-->
+        <!--        </el-tooltip>-->
+        <lang-select class="right-menu-item hover-effect" />
+      </template>
       <el-dropdown
         class="avatar-container right-menu-item hover-effect"
         trigger="click"
       >
         <div class="avatar-wrapper">
           <img
-            :src="avatar+'?imageView2/1/w/80/h/80'"
+            :src="avatar|getAvatar"
             class="user-avatar"
           >
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown">
-          <router-link to="/">
+          <router-link to="/profile/">
             <el-dropdown-item>
-              Home
+              {{ $t('navbar.profile') }}
             </el-dropdown-item>
           </router-link>
-          <a
-            target="_blank"
-            href="https://github.com/armour/vue-typescript-admin-template/"
-          >
+          <router-link to="/">
             <el-dropdown-item>
-              Github
+              {{ $t('navbar.dashboard') }}
             </el-dropdown-item>
-          </a>
-          <a
-            target="_blank"
-            href="https://armour.github.io/vue-typescript-admin-docs/"
+          </router-link>
+          <!--          <a-->
+          <!--            target="_blank"-->
+          <!--            href="https://github.com/armour/vue-typescript-admin-template/"-->
+          <!--          >-->
+          <!--            <el-dropdown-item>-->
+          <!--              {{ $t('navbar.github') }}-->
+          <!--            </el-dropdown-item>-->
+          <!--          </a>-->
+          <!--          <a-->
+          <!--            target="_blank"-->
+          <!--            href="https://armour.github.io/vue-typescript-admin-docs/"-->
+          <!--          >-->
+          <!--            <el-dropdown-item>Docs</el-dropdown-item>-->
+          <!--          </a>-->
+          <el-dropdown-item
+            divided
+            @click.native="logout"
           >
-            <el-dropdown-item>
-              Docs
-            </el-dropdown-item>
-          </a>
-          <el-dropdown-item divided>
-            <span
-              style="display:block;"
-              @click="logout"
-            >LogOut</span>
+            <span style="display:block;">
+              {{ $t('navbar.logOut') }}
+            </span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -61,13 +79,33 @@ import { Component, Vue } from 'vue-property-decorator'
 import { AppModule } from '@/store/modules/app'
 import { UserModule } from '@/store/modules/user'
 import Breadcrumb from '@/components/Breadcrumb/index.vue'
+import ErrorLog from '@/components/ErrorLog/index.vue'
 import Hamburger from '@/components/Hamburger/index.vue'
+import HeaderSearch from '@/components/HeaderSearch/index.vue'
+import LangSelect from '@/components/LangSelect/index.vue'
+import Screenfull from '@/components/Screenfull/index.vue'
+import SizeSelect from '@/components/SizeSelect/index.vue'
+const defaultAvatar = require('@/assets/logo/avatar.gif')
 
 @Component({
   name: 'Navbar',
   components: {
     Breadcrumb,
-    Hamburger
+    ErrorLog,
+    Hamburger,
+    HeaderSearch,
+    LangSelect,
+    Screenfull,
+    SizeSelect
+  },
+  filters: {
+    getAvatar(val:string) {
+      if (val.length < 1) {
+        return defaultAvatar
+      } else {
+        return process.env.VUE_APP_STATIC_URL + val
+      }
+    }
   }
 })
 export default class extends Vue {
@@ -89,7 +127,9 @@ export default class extends Vue {
 
   private async logout() {
     await UserModule.LogOut()
-    this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    this.$router.push(`/login?redirect=${this.$route.fullPath}`).catch(err => {
+      console.warn(err)
+    })
   }
 }
 </script>
@@ -118,6 +158,11 @@ export default class extends Vue {
 
   .breadcrumb-container {
     float: left;
+  }
+
+  .errLog-container {
+    display: inline-block;
+    vertical-align: top;
   }
 
   .right-menu {

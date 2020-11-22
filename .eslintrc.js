@@ -28,7 +28,7 @@ module.exports = {
     'vue/match-component-file-name': 'error',
     'vue/object-curly-spacing': 'error'
   },
-  'extends': [
+  extends: [
     'eslint:recommended',
     'plugin:vue/recommended',
     '@vue/standard',

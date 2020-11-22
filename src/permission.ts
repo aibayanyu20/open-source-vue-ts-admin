@@ -4,10 +4,23 @@ import 'nprogress/nprogress.css'
 import { Message } from 'element-ui'
 import { Route } from 'vue-router'
 import { UserModule } from '@/store/modules/user'
+import { PermissionModule } from '@/store/modules/permission'
+import i18n from '@/lang' // Internationalization
+import settings from './settings'
+import { MenuModule } from '@/store/modules/menu'
 
 NProgress.configure({ showSpinner: false })
 
-const whiteList = ['/login']
+const whiteList = ['/login', '/auth-redirect']
+
+const getPageTitle = (key: string) => {
+  const hasKey = i18n.te(`route.${key}`)
+  if (hasKey) {
+    const pageName = i18n.t(`route.${key}`)
+    return `${pageName} - ${settings.title}`
+  }
+  return `${settings.title}`
+}
 
 router.beforeEach(async(to: Route, _: Route, next: any) => {
   // Start progress bar
@@ -21,12 +34,27 @@ router.beforeEach(async(to: Route, _: Route, next: any) => {
       NProgress.done()
     } else {
       // Check whether the user has obtained his permission roles
-      if (UserModule.roles.length === 0) {
+      if (UserModule.roles.length === 0 || !MenuModule.isMenu) {
         try {
-          // Get user info, including roles
-          await UserModule.GetUserInfo()
-          // Set the replace: true, so the navigation will not leave a history record
-          next({ ...to, replace: true })
+          // Note: roles must be a object array! such as: ['admin'] or ['developer', 'editor']
+          if (UserModule.roles.length === 0) {
+            await UserModule.GetUserInfo()
+          }
+          if (!MenuModule.isMenu) {
+            // 判断一下菜单是否能也需要重新获取
+            MenuModule.getMenus().then(() => {
+              // 完成菜单的添加工作
+              // Generate accessible routes map based on role
+              PermissionModule.GenerateRoutes(MenuModule.menus)
+              // Dynamically add accessible routes
+              router.addRoutes(PermissionModule.dynamicRoutes)
+              // Hack: ensure addRoutes is complete
+              // Set the replace: true, so the navigation will not leave a history record
+              next({ ...to, replace: true })
+            })
+          } else {
+            next({ ...to, replace: true })
+          }
         } catch (err) {
           // Remove token and redirect to login page
           UserModule.ResetToken()
@@ -53,8 +81,9 @@ router.beforeEach(async(to: Route, _: Route, next: any) => {
 
 router.afterEach((to: Route) => {
   // Finish progress bar
+  // hack: https://github.com/PanJiaChen/vue-element-admin/pull/2939
   NProgress.done()
 
   // set page title
-  document.title = to.meta.title
+  document.title = getPageTitle(to.meta.title)
 })
