@@ -5,7 +5,9 @@
       mode="out-in"
     >
       <keep-alive :include="cachedViews">
-        <router-view :key="key" />
+        <div style="padding: 20px">
+          <router-view :key="key" />
+        </div>
       </keep-alive>
     </transition>
   </section>

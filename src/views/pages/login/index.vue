@@ -70,37 +70,7 @@
       >
         {{ $t('login.logIn') }}
       </el-button>
-
-      <div style="position:relative">
-        <div class="tips">
-          <span>{{ $t('login.username') }} : admin </span>
-          <span>{{ $t('login.password') }} : {{ $t('login.any') }} </span>
-        </div>
-        <div class="tips">
-          <span>{{ $t('login.username') }} : editor </span>
-          <span>{{ $t('login.password') }} : {{ $t('login.any') }} </span>
-        </div>
-
-        <el-button
-          class="thirdparty-button"
-          type="primary"
-          @click="showDialog=true"
-        >
-          {{ $t('login.thirdparty') }}
-        </el-button>
-      </div>
     </el-form>
-
-    <el-dialog
-      :title="$t('login.thirdparty')"
-      :visible.sync="showDialog"
-    >
-      {{ $t('login.thirdpartyTips') }}
-      <br>
-      <br>
-      <br>
-      <social-sign />
-    </el-dialog>
   </div>
 </template>
 
@@ -110,7 +80,6 @@ import { Route } from 'vue-router'
 import { Dictionary } from 'vue-router/types/router'
 import { Form as ElForm, Input } from 'element-ui'
 import { UserModule } from '@/store/modules/user'
-import { isValidUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect/index.vue'
 import SocialSign from './components/SocialSignin.vue'
 
@@ -123,24 +92,28 @@ import SocialSign from './components/SocialSignin.vue'
 })
 export default class extends Vue {
   private validateUsername = (rule: any, value: string, callback: Function) => {
-    if (!isValidUsername(value)) {
-      callback(new Error('Please enter the correct user name'))
+    if (value.length < 1) {
+      callback(new Error('账号不能为空'))
+    } else if (value.length < 5) {
+      callback(new Error('账号不能低于5位'))
     } else {
       callback()
     }
   }
 
   private validatePassword = (rule: any, value: string, callback: Function) => {
-    if (value.length < 6) {
-      callback(new Error('The password can not be less than 6 digits'))
+    if (value.length < 1) {
+      callback(new Error('密码不能为空'))
+    } else if (value.length < 6) {
+      callback(new Error('密码不能小于6位'))
     } else {
       callback()
     }
   }
 
   private loginForm = {
-    username: 'admin',
-    password: '111111'
+    username: '',
+    password: ''
   }
 
   private loginRules = {
@@ -194,17 +167,23 @@ export default class extends Vue {
     (this.$refs.loginForm as ElForm).validate(async(valid: boolean) => {
       if (valid) {
         this.loading = true
-        await UserModule.Login(this.loginForm)
-        this.$router.push({
-          path: this.redirect || '/',
-          query: this.otherQuery
-        }).catch(err => {
-          console.warn(err)
-        })
+        try {
+          await UserModule.Login(this.loginForm)
+          this.$message.success('登录成功')
+          this.$router.push({
+            path: this.redirect || '/',
+            query: this.otherQuery
+          }).catch(err => {
+            console.log('log')
+            console.warn(err)
+          })
+        } catch (e) {
+          console.log('fail login')
+        }
         // Just to simulate the time of the request
         setTimeout(() => {
           this.loading = false
-        }, 0.5 * 1000)
+        }, 500)
       } else {
         return false
       }

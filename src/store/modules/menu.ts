@@ -24,6 +24,12 @@ class Menu extends VuexModule implements IMenuState {
   }
 
   @Action
+  public removeMenus() {
+    this.SET_MENUS([])
+    this.SET_IS_MENU(false)
+  }
+
+  @Action
   public async getMenus() {
     // 获取动态的菜单
     try {

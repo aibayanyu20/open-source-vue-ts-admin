@@ -4,6 +4,7 @@ import { getToken, setToken, removeToken } from '@/utils/cookies'
 import { resetRouter } from '@/router'
 import { TagsViewModule } from './tags-view'
 import store from '@/store'
+import { MenuModule } from '@/store/modules/menu'
 
 export interface IUserState {
   token: string
@@ -72,6 +73,13 @@ class User extends VuexModule implements IUserState {
   @Action
   public ResetToken() {
     removeToken()
+    MenuModule.removeMenus()
+    resetRouter()
+    TagsViewModule.delAllViews()
+    // Reset visited views and cached views
+    this.SET_USER_INFO({})
+    this.SET_AVATAR('')
+    this.SET_INTRODUCTION('')
     this.SET_TOKEN('')
     this.SET_ROLES([])
   }
@@ -92,6 +100,7 @@ class User extends VuexModule implements IUserState {
     }
     this.SET_ROLES(roles.map((v:any) => v.role.name))
     this.SET_NAME(userinfo.nickname)
+    this.SET_USER_INFO(userinfo)
     this.SET_AVATAR(userinfo.avatar)
     this.SET_INTRODUCTION('introduction')
     this.SET_EMAIL(email)
@@ -103,13 +112,7 @@ class User extends VuexModule implements IUserState {
       throw Error('退出登录失败，用户信息不存在')
     }
     await logout({})
-    removeToken()
-    resetRouter()
-    TagsViewModule.delAllViews()
-    this.SET_USER_INFO({})
-    this.SET_AVATAR('')
-    this.SET_INTRODUCTION('')
-    // Reset visited views and cached views
+    this.ResetToken()
   }
 }
 

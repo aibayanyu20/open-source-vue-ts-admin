@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container">
+  <div>
     Hello World
   </div>
 </template>
@@ -24,7 +24,4 @@ export default class extends Vue {
 </script>
 
 <style>
-.dashboard-container{
-  padding: 20px;
-}
 </style>

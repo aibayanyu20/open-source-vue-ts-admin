@@ -50,7 +50,7 @@ const formatMenus = (menu:MenuInfo):RouteConfig => {
   return {
     path,
     name,
-    component: menu.component === 'Layout' ? () => import('@/layout/index.vue') : menu.component === 'Blank' ? () => import('@/layout/Blank.vue') : () => import('@/views/setting/Menu.vue'),
+    component: menu.component === 'Layout' ? () => import('@/layout/index.vue') : menu.component === 'Blank' ? () => import('@/layout/Blank.vue') : loadView(menu.component),
     redirect: menu.type === 0 ? (menu.redirect.length > 0 ? menu.redirect : 'noredirect') : '',
     meta: {
       title: menu.title,
@@ -64,6 +64,10 @@ const formatMenus = (menu:MenuInfo):RouteConfig => {
       activeMenu: menu.metaActiveMenu
     }
   }
+}
+
+export const loadView = (view:string) => { // 路由懒加载
+  return (resolve:any) => require([`@/views${view}`], resolve)
 }
 
 const getPatch = (path:string, isMenu = true) => {
